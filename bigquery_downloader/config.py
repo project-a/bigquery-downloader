@@ -3,6 +3,8 @@
 import datetime
 import pathlib
 
+from mara_config import declare_config
+
 
 class DataSet:
     def __init__(self, query_file_path: pathlib.Path = None, json_credentials_path: pathlib.Path = None,
@@ -35,6 +37,7 @@ class DataSet:
         return '{' + ',\n  '.join([f'{key}={value}' for key, value in self.__dict__.items()]) + '}'
 
 
+@declare_config()
 def data_sets() -> [DataSet]:
     """A list of data sets to download from BigQuery"""
     return [DataSet()]
