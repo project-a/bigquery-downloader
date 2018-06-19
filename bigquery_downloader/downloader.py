@@ -21,7 +21,7 @@ def download_data():
         # load query and apply pattern substitutions
         query = open(data_set.query_file_path, 'r', encoding="utf-8").read().strip()
         for replace, _with in data_set.replacements.items():
-            query.replace(replace, _with)
+            query = query.replace(replace, _with)
 
         # iterate all days in reverse order
         for day in [last_date - datetime.timedelta(x) for x in range((last_date - first_date).days + 1)]:
