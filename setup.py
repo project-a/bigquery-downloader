@@ -7,7 +7,7 @@ setup(
     description="A script for downloading BigQuery data sets that are organized by day",
 
     install_requires=[
-        'mara-config>=0.1'
+        'mara-config>=0.1',
         'bigquery-python>=1.14.0',
         'click>=6.0',
         'pyOpenSSL>=17.5.0',
