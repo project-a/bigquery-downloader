@@ -4,7 +4,6 @@ import datetime
 import pathlib
 
 import click
-from bigquery_downloader import config, downloader
 
 
 @click.command()
@@ -23,6 +22,7 @@ def download_data(**kwargs):
 
     When no option is specified, the defaults from the config module are used instead
     """
+    from . import downloader, config
     if any(kwargs.values()):
         if kwargs['first_date']:
             kwargs['first_date'] = datetime.datetime.strptime(kwargs['first_date'], "%Y-%m-%d").date()
