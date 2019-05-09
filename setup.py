@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='bigquery-downloader',
-    version='2.0.0',
+    version='2.1.0',
 
     description="A script for downloading BigQuery data sets that are organized by day",
 

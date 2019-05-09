@@ -7,7 +7,8 @@ import pathlib
 class DataSet:
     def __init__(self, query_file_path: pathlib.Path = None, json_credentials_path: pathlib.Path = None,
                  data_dir: pathlib.Path = None, output_file_name: str = None, replacements: {str: str} = None,
-                 use_legacy_sql: bool = None, first_date: datetime.date = None):
+                 use_legacy_sql: bool = None, first_date: datetime.date = None,
+                 ignore_404s: bool = False):
         """
         A query to download to local files for a range of dates.
 
@@ -22,6 +23,7 @@ class DataSet:
             replacements: A dictionary of string replacements {replace: with}
             use_legacy_sql: When true, then the bigquery "legacy sql" is used
             first_date: The first day for which to download data
+            ignore_404s: When True, then 404 responses (e.g. missing day partitions) are ignored
         """
         self.query_file_path = query_file_path or pathlib.Path('/path/to/query.sql')
         self.json_credentials_path = json_credentials_path or pathlib.Path('/path/to/big-query-credentials.json')
@@ -30,6 +32,7 @@ class DataSet:
         self.use_legacy_sql = use_legacy_sql or False
         self.first_date = first_date or datetime.date(2010, 1, 1)
         self.data_dir = data_dir or pathlib.Path('/tmp/bigquery/')
+        self.ignore_404s = ignore_404s
 
     def __repr__(self) -> str:
         return '{' + ',\n  '.join([f'{key}={value}' for key, value in self.__dict__.items()]) + '}'

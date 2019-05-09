@@ -9,6 +9,7 @@ from bigquery_downloader import config
 def download_data():
     """Downloads all configured data sets"""
     import bigquery
+    from googleapiclient.errors import HttpError
 
     for data_set in config.data_sets():
         print('Initializing BigQuery client')
@@ -38,22 +39,31 @@ def download_data():
             day_query = query.replace('DAY_ID', f'{day:%Y%m%d}')
             print(f'----------------------------\n{day_query}\n----------------------------')
             sys.stdout.write('Waiting for result ')
-            job_id, _ = bigquery_client.query(day_query, use_legacy_sql=data_set.use_legacy_sql)
-            while True:
-                is_complete, row_count = bigquery_client.check_job(job_id)
-                if is_complete:
-                    break
+            try:
+                job_id, _ = bigquery_client.query(day_query, use_legacy_sql=data_set.use_legacy_sql)
+
+                while True:
+                    is_complete, row_count = bigquery_client.check_job(job_id)
+                    if is_complete:
+                        break
+                    else:
+                        sys.stdout.write('.')
+                    time.sleep(1)
+
+                print(f'\nDownloading {row_count} rows')
+                rows = bigquery_client.get_query_rows(job_id)
+
+                print(f'Writing {path}')
+                with gzip.open(path, "wt", encoding='utf-8') as file:
+                    if row_count:
+                        file.write('\t'.join(rows[0].keys()) + '\n')
+                        for row in rows:
+                            file.write('\t'.join(
+                                [str(col).replace('\t', '\\t') if col != None else '' for col in row.values()]) + '\n')
+
+            except HttpError as e:
+                if e.resp.status == 404 and data_set.ignore_404s:
+                    sys.stderr.write(e._get_reason() + '\n')
                 else:
-                    sys.stdout.write('.')
-                time.sleep(1)
+                    raise e
 
-            print(f'\nDownloading {row_count} rows')
-            rows = bigquery_client.get_query_rows(job_id)
-
-            print(f'Writing {path}')
-            with gzip.open(path, "wt", encoding='utf-8') as file:
-                if row_count:
-                    file.write('\t'.join(rows[0].keys()) + '\n')
-                    for row in rows:
-                        file.write('\t'.join(
-                            [str(col).replace('\t', '\\t') if col != None else '' for col in row.values()]) + '\n')

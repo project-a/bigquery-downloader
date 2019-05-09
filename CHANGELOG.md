@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.0 (2019-05-09)
+
+- Add parameter `ignore_404s` for ignoring 404 responses from the BigQuery API (e.g. in case of missing day partitions)
+
+
 ## 2.0.0 (2019-04-13)
 
 - Change MARA_XXX variables to functions to delay importing of imports

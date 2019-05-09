@@ -16,6 +16,7 @@ import click
 @click.option('--use_legacy_sql', help='When true, then the bigquery "legacy sql" is used, default: False.',
               type=click.BOOL)
 @click.option('--first_date', help='The first day for which to download data, e.g. "2010-01-01"', type=click.STRING)
+@click.option('--ignore_404s', help='When True, then 404 responses (e.g. missing day partitions) are ignored', type=click.BOOL)
 def download_data(**kwargs):
     """
     Downloads a list of data sets from bigquery.
