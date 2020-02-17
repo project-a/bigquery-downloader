@@ -2,15 +2,13 @@ from setuptools import setup, find_packages
 
 setup(
     name='bigquery-downloader',
-    version='2.1.0',
+    version='3.0.0',
 
     description="A script for downloading BigQuery data sets that are organized by day",
 
     install_requires=[
-        'bigquery-python>=1.14.0',
-        'click>=6.0',
-        'pyOpenSSL>=17.5.0',
-        'oauth2client>=4.1.2'
+        'google-cloud-bigquery>=1.24.0',
+        'click>=6.0'
     ],
 
     packages=find_packages(),

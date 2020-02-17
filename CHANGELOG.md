@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.0.0 (2020-02-17)
+
+- Change API client library to the official `google-cloud-bigquery`. 
+
+**required changes** 
+
+- Due to breaking changes, please check results
+
+
 ## 2.1.0 (2019-05-09)
 
 - Add parameter `ignore_404s` for ignoring 404 responses from the BigQuery API (e.g. in case of missing day partitions)

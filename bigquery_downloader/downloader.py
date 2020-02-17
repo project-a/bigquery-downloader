@@ -1,20 +1,21 @@
 import datetime
 import gzip
 import sys
-import time
 
 from bigquery_downloader import config
 
 
 def download_data():
     """Downloads all configured data sets"""
-    import bigquery
-    from googleapiclient.errors import HttpError
+    from google.cloud import bigquery
+    from google.api_core import retry
+    from google.api_core.exceptions import ClientError
 
     for data_set in config.data_sets():
         print('Initializing BigQuery client')
-        bigquery_client = bigquery.get_client(json_key_file=data_set.json_credentials_path,
-                                              readonly=True, num_retries=3)
+
+        bigquery_client = bigquery.Client.from_service_account_json(
+            json_credentials_path=data_set.json_credentials_path)
 
         first_date = data_set.first_date
         last_date = datetime.datetime.utcnow().date() - datetime.timedelta(days=1)
@@ -40,30 +41,29 @@ def download_data():
             print(f'----------------------------\n{day_query}\n----------------------------')
             sys.stdout.write('Waiting for result ')
             try:
-                job_id, _ = bigquery_client.query(day_query, use_legacy_sql=data_set.use_legacy_sql)
+                query_options = bigquery.job.QueryJobConfig(use_legacy_sql=data_set.use_legacy_sql)
+                # API request
+                job = bigquery_client.query(day_query, job_config=query_options, retry=retry.Retry(deadline=60))
 
-                while True:
-                    is_complete, row_count = bigquery_client.check_job(job_id)
-                    if is_complete:
-                        break
-                    else:
-                        sys.stdout.write('.')
-                    time.sleep(1)
+                # get all the rows in the results. The iterator automatically handles pagination
+                results = job.result()
 
-                print(f'\nDownloading {row_count} rows')
-                rows = bigquery_client.get_query_rows(job_id)
+                print(f'\nDownloading {results.total_rows} rows')
 
                 print(f'Writing {path}')
+                fields = [field.name for field in results.schema]
                 with gzip.open(path, "wt", encoding='utf-8') as file:
-                    if row_count:
-                        file.write('\t'.join(rows[0].keys()) + '\n')
-                        for row in rows:
+                    if results:
+                        file.write('\t'.join(fields) + '\n')
+                        for row in results:
                             file.write('\t'.join(
-                                [str(col).replace('\t', '\\t') if col != None else '' for col in row.values()]) + '\n')
+                                [str(col).replace('\t', '\\t') if col is not None else '' for col in
+                                 row.values()]) + '\n')
 
-            except HttpError as e:
-                if e.resp.status == 404 and data_set.ignore_404s:
-                    sys.stderr.write(e._get_reason() + '\n')
+            except ClientError as e:
+                response_status_code = int(e.code)
+                if response_status_code == 404 and data_set.ignore_404s:
+                    for error in e.errors:
+                        sys.stderr.write('ERROR: {}'.format(error['message']))
                 else:
                     raise e
-
